@@ -53,7 +53,9 @@ This step is optional, but recommended, to start the life of your dual boot syst
 6. Make sure the format is "Mac OS Extended (Journaled)" and the name is "Untitled". Click Erase.
 7. Open a Terminal window and run the following command (may take several minutes). Then use OS X to eject the flash drive, to ensure all data has been written. 
 
-`sudo /Applications/Install\ OS\ X\ El\ Capitan.app/Contents/Resources/createinstallmedia --volume /Volumes/Untitled --applicationpath /Applications/Install\ OS\ X\ El\ Capitan.app --nointeraction`
+```bash
+sudo /Applications/Install\ OS\ X\ El\ Capitan.app/Contents/Resources/createinstallmedia --volume /Volumes/Untitled --applicationpath /Applications/Install\ OS\ X\ El\ Capitan.app --nointeraction
+```
 
 #### Boot from USB flash drive and clean install OS X El Capitan
 
