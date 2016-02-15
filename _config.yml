@@ -1,2 +1,3 @@
 name: Spencer Brown
 markdown: kramdown
+permalink: /blog/:year/:month/:day/:title
