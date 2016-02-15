@@ -91,7 +91,8 @@ sudo /Applications/Install\ OS\ X\ El\ Capitan.app/Contents/Resources/createinst
 ## Set up Arch Linux
 
 #### Prepare for Arch Linux installation
- 
+
+0. Ensure you have a hard-wired Ethernet connection, preferably using the Thunderbolt Gigabit Ethernet adapter. 
 1. Insert the Arch Linux flash drive created in the previous section.
 1. Hold down the Option key, and press and release Power. Continue to hold down Option until you see icons.
 2. Using the arrow keys, navigate to "EFI Boot" or similar and hit Enter to boot the flash drive.
@@ -104,9 +105,24 @@ sudo /Applications/Install\ OS\ X\ El\ Capitan.app/Contents/Resources/createinst
 
 #### Install Arch Linux
 
-8. Go through normal install steps but do not install a bootloader. We will use the EFI bootloader that is built into the Linux kernel.
-9. Umount the Arch Linux partition, for example `umount /dev/sda4`.
-10. Shut down the system using `systemctl poweroff` and remove the USB flash drive.
+This installs Arch Linux to the partition we created in the previous step. No bootloader is installed because we are using the Linux EFI bootloader that is included in the kernel.
+
+* Sync time: run `timedatectl set-ntp true`
+* Set up the mirror list by editing `/etc/pacman.d/mirrorlist` and commenting out all but the RackSpace entry.
+* Bootstrap the install: run `pacstrap /mnt base base-devel`, which will take several minutes.
+* Generate the fstab: run `genfstab -p /mnt >> /mnt/etc/fstab`
+* Switch to the installed system: run `arch-chroot /mnt`
+* Set the hostname: run e.g. `echo starship-enterprise > /etc/hostname`
+* Set the local timezone to e.g. Central: `ln -s /usr/share/zoneinfo/US/Central /etc/localtime` (note: if you skip this step the system will run on UTC time)
+* Set up your locale: edit `/etc/locale.gen` and uncomment your desired locales (e.g. `en_US.UTF-8 UTF-8`), then run `locale-gen`
+* Set your locale current configuration: run e.g. `echo LANG=en_US.UTF-8 > /etc/locale.conf`
+* Set up the network: use `ip addr` to discover your network interface name, then run e.g. `systemctl enable dhcpcd@enp0s3.service`
+* Set the system clock: run `hwclock --systohc --utc`
+* Create your initfamfs: run `mkinitcpio -p linux`
+* Set the root user password: run `passwd`
+
+Finally, run `exit` to leave the installed system environment, and `systemctl poweroff` to shut down the machine.
+Remove the USB flash drive.
 
 ## Set up dual boot
 
