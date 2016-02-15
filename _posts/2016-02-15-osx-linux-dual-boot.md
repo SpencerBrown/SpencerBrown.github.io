@@ -4,7 +4,7 @@ title: "Dual booting OS X and Linux"
 date: 2016-02-15
 ---
 
-I've successfully set upmy MacBook Pro Retina (mid-2012) with a clean install of OS X El Capitan, dual booting to Arch Linux.
+I've successfully set up my MacBook Pro Retina (mid-2012) with a clean install of OS X El Capitan, dual booting to Arch Linux.
 Other blog posts, and the Arch Linux Wiki itself, are misleading, confusing, or leave out important parts.
 Here's the straight information. This recipe should work (with some obvious adjustments) for other Mac computers or Linux distributions.
 
@@ -22,7 +22,7 @@ Why not make your machine completely Linux? Because you need OS X for support/ma
 **You need the following:**
 
 1. A Mac computer. It's best if this is an "extra" machine that you want to use mainly for Linux.
-2. A decent Internet connection, as you will be downloading multiple gigabytes
+2. A decent Internet connection, as you will be downloading multiple gigabytes of code.
 3. A USB flash drives that you can erase. It need to be at least 8GB, preferably 16GB. A USB3 flash drive will make this go much faster.
 
 **We do this in five steps:**
@@ -42,8 +42,6 @@ You can skip the "clean install El Capitan" step, and keep your data, but it's r
 ## Clean install El Capitan
 
 This step is optional, but recommended, to start the life of your dual boot system with a clean OS X install.
-
-Credit goes to [Mashable](http://mashable.com/2015/10/01/clean-install-os-x-el-capitan) who created a good guide, which I Have distilled to the following steps.
 
 #### Create El Capitan installation USB flash drive
 
@@ -120,3 +118,17 @@ Credit goes to [Mashable](http://mashable.com/2015/10/01/clean-install-os-x-el-c
 8. Change to the rEFInd directory, something like `cd /Volumes/Macintosh HD/Users/<your-account>/Downloads/refind-bin-0.10.2`.
 9. Run `./refind-install`. You should see messages indicating success.
 10. Reboot your Mac. If all is well, you should see a rEFInd dual boot screen with icons for OS X and Arch Linux. Test this by booting both in turn.
+
+## References/Source Material
+
+Credit goes to these sites for providing source material for this blog post.
+You can reference these for further information.
+
+* [Mashable: how to clean install El Capitan](http://mashable.com/2015/10/01/clean-install-os-x-el-capitan)
+* [Arch Linux: Macbook Installation](https://wiki.archlinux.org/index.php/MacBook#OS_X_with_Arch_Linux)
+* [Arch Linux: USB flash installation media in Mac OS X](https://wiki.archlinux.org/index.php/USB_flash_installation_media#In_Mac_OS_X)
+* [The rEFInd Boot Manager](http://www.rodsbooks.com/refind)
+
+A special thanks to Mashable, and the Rod Smith site, for excellent explanations and instructions.
+
+If you really want to dig into how things work during boot, an excellent read is Rod Smith's [Managing EFI Boot Loaders for Linux](http://www.rodsbooks.com/efi-bootloaders/index.html).
