@@ -90,7 +90,7 @@ sudo /Applications/Install\ macOS\ Sierra.app/Contents/Resources/createinstallme
 
 ## Set up Arch Linux
 
-#### Prepare for Arch Linux installation
+#### Prepare for Arch Linux installation with encrypted root
 
 0. Ensure you have a hard-wired Ethernet connection, preferably using the Thunderbolt Gigabit Ethernet adapter. 
 1. Insert the Arch Linux flash drive created in the previous section.
@@ -99,9 +99,23 @@ sudo /Applications/Install\ macOS\ Sierra.app/Contents/Resources/createinstallme
 3. You should now be booted into Arch Linux, running as root, working entirely from RAM. 
 4. Run `cgdisk` and delete the partition previously created under macOS. 
 5. **note** some recommend adding an extra dummy 128MB partition in front of the main one created in the next step.
-5. Now add a partition for Linux, using that free space, and mark it for Linux file system. Let's say it's `/dev/sda4` for example.
-6. Format the partition using `mkfs.ext4 /dev/sda4` for example.
-7. Mount the partition using `mount /dev/sda4 /mnt` for example.
+5. Add a boot partition of 512MB, using that free space, and mark it for Linux file system. Let's say it's `/dev/sda4` in this example.
+5. Now add a partition for Linux, using the rest of the free space, and mark it for Linux file system. Let's say it's `/dev/sda5` in this example.
+5. If you are encrypting the Linux partition, or if it has old data you wish to ensure is wiped, you should wipe it with dummy encrypted data. See "Wipe Partition" below.
+5. If you are encrypting the Linux partition, 
+6. Format the partitions using `mkfs.ext4 /dev/sda4` and `mkfs.ext4 /dev/sda5`.
+6. Mount the Boot partition using `mkdir /mnt/boot` and `mount /dev/sda4 /mnt/boot`.
+7. Mount the Linux partition using `mount /dev/sda5 /mnt`.
+
+#### Wipe Partition
+
+To wipe partition `/dev/sda4` with zero bits encrypted by a random key:
+
+```
+cryptsetup open --type plain /dev/sda4 container --key-file /dev/random
+dd if=/dev/zero of=/dev/mapper/container status=progress
+cryptsetup close container
+```
 
 #### Install Arch Linux
 
@@ -119,7 +133,7 @@ This installs Arch Linux to the partition we created in the previous step. No bo
 * Set your locale current configuration: run e.g. `echo LANG=en_US.UTF-8 > /etc/locale.conf`
 * Set up the network: use `ip link` to discover your network interface name, then run e.g. `systemctl enable dhcpcd@enp0s3.service`
 * Set the system clock: run `hwclock --systohc --utc`
-* Create your initfamfs: run `mkinitcpio -p linux`
+* **probably not necessary** Create your initramfs: run `mkinitcpio -p linux`
 * Set the root user password: run `passwd`
 
 Finally, run `exit` to leave the installed system environment, and `systemctl poweroff` to shut down the machine.
@@ -131,7 +145,7 @@ Remove the USB flash drive.
 2. Download and unzip the rEFInd binary zip package from [Rod Smith's project](http://www.rodsbooks.com/refind/getting.html). Make sure the unzipped directory is in your Downloads directory.
 3. Shutdown (power off) the Mac.
 4. Hold down the Command and R keys and press and release Power. This should boot your Mac into Recovery mode.
-5. If you enabled FileVault2 encryption of your macOS hard drive, unlock the drive by running Disk Utility and choosing File/Unlock Disk from the menus, then quit Directory Utility.
+5. If you enabled FileVault2 encryption of your macOS hard drive, unlock the drive by running Disk Utility and choosing File/Unlock Disk from the menus, then quit Disk Utility. With macOS Sierra, you may need to Open Disk Image.
 6. Run Terminal from the Utilities menu. 
 7. Run `df -h` and find where the main hard drive is mounted (it will be something like `/Volumes/Macintosh HD`.
 8. Change to the rEFInd directory, something like `cd /Volumes/Macintosh HD/Users/<your-account>/Downloads/refind-bin-0.10.2`.
