@@ -1,12 +1,18 @@
 ---
 layout: post
-title: "Dual booting macOS and Linux"
-date: 2016-02-15
+title: "Dual booting macOS and Arch Linux"
+date: 2017-08-26
 ---
 
-I've successfully set up my MacBook Pro Retina (mid-2012) with a clean install of macOS Sierra, dual booting to Arch Linux.
+I've successfully set up my MacBook Pro Retina (mid-2012) with a clean install of macOS Sierra, dual booting to Arch Linux, with an encrypted root filesystem.
 Other blog posts, and the Arch Linux Wiki itself, are misleading, confusing, or leave out important parts.
 Here's the straight information. This recipe should work (with some obvious adjustments) for other Mac computers or Linux distributions.
+
+This post has been updated with the following improvements:
+
+* Use `systemd-boot` rather than `refind` as the boot manager, which simplifies installation.
+* Add steps to encrypt the Arch Linux root filesystem.
+* General cleanup and clarification.
 
 **Why would you want to dual boot?**
 
