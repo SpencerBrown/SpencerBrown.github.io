@@ -25,13 +25,14 @@ Why not make your machine completely Linux? Because you need macOS for support/m
 2. A decent Internet connection, as you will be downloading multiple gigabytes of code.
 3. A USB flash drives that you can erase. It need to be at least 8GB, preferably 16GB. A USB3 flash drive will make this go much faster.
 
-**We do this in five steps:**
+**We do this in several steps:**
 
 1. Back up any data that you need
-1. Clean install macOS Sierra
-2. Prepare for Arch Linux install
-3. Install Arch Linux
-4. Set up dual boot
+2. Clean install macOS Sierra
+3. Prepare for Arch Linux install
+4. **or** Prepare for Arch Linux encrypted install
+5. Install Arch Linux
+6. Set up dual boot
 
 ## Back up data
 
@@ -43,7 +44,7 @@ You can skip the "clean install macOS Sierra" step, and keep your data, but it's
 
 This step is optional, but recommended, to start the life of your dual boot system with a clean macOS install.
 
-#### Create macOS Sierra installation USB flash drive
+### Create macOS Sierra installation USB flash drive
 
 1. Open the App Store on your Mac, go to the Purchased tab, and download macOS Sierra. **warning** this is a 6GB download!
 2. If you see it, quit the application asking you to install.
@@ -51,13 +52,15 @@ This step is optional, but recommended, to start the life of your dual boot syst
 4. Open the Disk Utility application.
 5. Navigate to your USB drive (not a partition) and click the Erase tab.
 6. Make sure the format is "Mac OS Extended (Journaled)" and the name is "Untitled". The partition scheme should be "Master Boot Record". Click Erase.
-7. Open a Terminal window and run the following command (may take several minutes). 
+7. Open a Terminal window and run the following command (may take several minutes).
+
 ```bash
 sudo /Applications/Install\ macOS\ Sierra.app/Contents/Resources/createinstallmedia --volume /Volumes/Untitled --applicationpath /Applications/Install\ macOS\ Sierra.app
 ```
-8. Using Finder, eject the flash drive, to ensure all data has been written. 
 
-#### Boot from USB flash drive and clean install macOS Sierra
+When it completes, use Finder to eject the flash drive, to ensure all data has been written.
+
+### Boot from USB flash drive and clean install macOS Sierra
 
 1. On the Mac that you want to clean install, shutdown (power off), then insert the macOS Sierra install USB flash drive that you created in the previous section.
 2. Hold down the Option key, then press and release Power. Continue to hold the Option key until you see some icons.
@@ -69,7 +72,7 @@ sudo /Applications/Install\ macOS\ Sierra.app/Contents/Resources/createinstallme
 
 ## Prepare for Arch Linux install
 
-#### Resize the macOS partition
+### Resize the macOS partition
 
 1. Start up your Mac and run the Disk Utility application.
 2. Select your Mac hard drive (not a partition) and click the Partition tab.
@@ -77,7 +80,7 @@ sudo /Applications/Install\ macOS\ Sierra.app/Contents/Resources/createinstallme
 4. Change the "Size:" number to the desired size of your macOS partition, and hit Tab. 
 5. Click the Apply button to resize the drive.
 
-#### Create the Arch Linux installation USB flash drive
+### Create the Arch Linux installation USB flash drive
 
 1. Download the latest Arch Linux `.iso` file from [the RackSpace mirror](http://mirror.rackspace.com/archlinux/iso/latest/).
 2. Insert your USB flash drive, and eject it if it is mounted.
@@ -88,80 +91,125 @@ sudo /Applications/Install\ macOS\ Sierra.app/Contents/Resources/createinstallme
 7. Eject the drive: `diskutil eject /dev/disk2` for example.
 8. Shut down your Mac and remove the flash drive.
 
-## Set up Arch Linux
+## Prepare for Arch Linux installation
 
-#### Prepare for Arch Linux installation with encrypted root
+1. Ensure you have a hard-wired Ethernet connection, preferably using the Thunderbolt Gigabit Ethernet adapter.
+2. Insert the Arch Linux flash drive created in the previous section.
+3. Hold down the Option key, and press and release Power. Continue to hold down Option until you see icons.
+4. Using the arrow keys, navigate to "EFI Boot" or similar and hit Enter to boot the flash drive.
+5. You should now be booted into Arch Linux, running as root, working entirely from RAM.
+6. Run `lsblk` and `lsblk -f` and review the existing disks and partitions.
+7. For this example, we are assuming the disk device you are working with is `/dev/sda`, adjust these steps as needed.
+8. Run `cgdisk /dev/sda` and delete the partition you created under macOS for Arch Linux.
+9. Still under `cgdisk`, add a partition for Linux, using the rest of the free space, label it ARCH, and mark it for Linux file system. Let's say it's `/dev/sda4` in this example.
+10. Write the partition table and exit `cgdisk`.
 
-0. Ensure you have a hard-wired Ethernet connection, preferably using the Thunderbolt Gigabit Ethernet adapter. 
-1. Insert the Arch Linux flash drive created in the previous section.
-1. Hold down the Option key, and press and release Power. Continue to hold down Option until you see icons.
-2. Using the arrow keys, navigate to "EFI Boot" or similar and hit Enter to boot the flash drive.
-3. You should now be booted into Arch Linux, running as root, working entirely from RAM. 
-4. Run `cgdisk` and delete the partition previously created under macOS. 
-5. **note** some recommend adding an extra dummy 128MB partition in front of the main one created in the next step.
-5. Add a boot partition of 512MB, using that free space, and mark it for Linux file system. Let's say it's `/dev/sda4` in this example.
-5. Now add a partition for Linux, using the rest of the free space, and mark it for Linux file system. Let's say it's `/dev/sda5` in this example.
-5. If you are encrypting the Linux partition, or if it has old data you wish to ensure is wiped, you should wipe it with dummy encrypted data. See "Wipe Partition" below.
-5. If you are encrypting the Linux partition, 
-6. Format the partitions using `mkfs.ext4 /dev/sda4` and `mkfs.ext4 /dev/sda5`.
-6. Mount the Boot partition using `mkdir /mnt/boot` and `mount /dev/sda4 /mnt/boot`.
-7. Mount the Linux partition using `mount /dev/sda5 /mnt`.
+If you do **not* wish to encrypt your Arch Linux root filesystem, just do the following two steps:
 
-#### Wipe Partition
+1. Format the partition using `mkfs.xfs /dev/sda4`.
+2. Mount the partition using `mount /dev/sda4 /mnt`.
 
-To wipe partition `/dev/sda4` with zero bits encrypted by a random key:
+If you *do* wish to encrypt your Arch Linux root filesystem, perform the steps in the following section.
 
-```
+### Set Up for Encrypted Arch Linux
+
+Use this section to encrypt the Arch Linux partition. Skip this section if you want your Arch Linux installation to be unencrypted.
+
+Wipe the Linux partition with dummy encrypted data:
+
+```bash
 cryptsetup open --type plain /dev/sda4 container --key-file /dev/random
+# The following command will end with a "No space left on device" message.
 dd if=/dev/zero of=/dev/mapper/container status=progress
 cryptsetup close container
 ```
 
-#### Install Arch Linux
+Set up encryption for the Linux partition, which will now be accessed as `/dev/mapper/archlinux`:
 
-This installs Arch Linux to the partition we created in the previous step. No bootloader is installed because we are using the Linux EFI bootloader that is included in the kernel.
+```bash
+cryptsetup -v -s 512 luksFormat /dev/sda4
+# Please remember the passphrase you entered! You will need it to access your Arch Linux system. 
+cryptsetup open --type luks /dev/sda4 archlinux
+```
 
-* Sync time: run `timedatectl set-ntp true`
-* Set up the mirror list by editing `/etc/pacman.d/mirrorlist` and commenting out all but the RackSpace entry.
-* Bootstrap the install: run `pacstrap /mnt base base-devel vim`, which will take several minutes.
-* Generate the fstab: run `genfstab -p /mnt >> /mnt/etc/fstab`
-* Switch to the installed system: run `arch-chroot /mnt`
-* Set the hostname: run e.g. `echo starship-enterprise > /etc/hostname`
-* Set the local timezone to e.g. Central: `ln -s /usr/share/zoneinfo/US/Central /etc/localtime` (note: if you skip this step the system will run on UTC time)
-* Set up your locale: edit `/etc/locale.gen` and uncomment your desired locales (e.g. `en_US.UTF-8 UTF-8`) 
-* Create your locale: run `locale-gen`
-* Set your locale current configuration: run e.g. `echo LANG=en_US.UTF-8 > /etc/locale.conf`
-* Set up the network: use `ip link` to discover your network interface name, then run e.g. `systemctl enable dhcpcd@enp0s3.service`
-* Set the system clock: run `hwclock --systohc --utc`
-* **probably not necessary** Create your initramfs: run `mkinitcpio -p linux`
-* Set the root user password: run `passwd`
+Back up the LUKS header:
 
-Finally, run `exit` to leave the installed system environment, and `systemctl poweroff` to shut down the machine.
-Remove the USB flash drive.
+```
+# ???
+```
 
-## Set up dual boot
+Format and mount the Linux partition:
 
-1. Power on the Mac and login to macOS. 
-2. Download and unzip the rEFInd binary zip package from [Rod Smith's project](http://www.rodsbooks.com/refind/getting.html). Make sure the unzipped directory is in your Downloads directory.
-3. Shutdown (power off) the Mac.
-4. Hold down the Command and R keys and press and release Power. This should boot your Mac into Recovery mode.
-5. If you enabled FileVault2 encryption of your macOS hard drive, unlock the drive by running Disk Utility and choosing File/Unlock Disk from the menus, then quit Disk Utility. With macOS Sierra, you may need to Open Disk Image.
-6. Run Terminal from the Utilities menu. 
-7. Run `df -h` and find where the main hard drive is mounted (it will be something like `/Volumes/Macintosh HD`.
-8. Change to the rEFInd directory, something like `cd /Volumes/Macintosh HD/Users/<your-account>/Downloads/refind-bin-0.10.2`.
-9. Run `./refind-install`. You should see messages indicating success.
-10. Reboot your Mac. If all is well, you should see a rEFInd dual boot screen with icons for macOS and Arch Linux. Test this by booting both in turn.
+```bash
+mkfs.xfs /dev/mapper/archlinux
+mount /dev/mapper/archlinux /mnt
+```
+
+## Install Arch Linux
+
+This installs Arch Linux to the partition we created in the previous step. No separate bootloader is installed because we are installing the `systemd-boot` boot manager, the kernel, and the `initramfs` into the EFI System Partition, which allows us to boot the kernel from there.
+
+1. Mount the ESP (EFI System Partition) as the boot partition by running `mkdir /mnt/boot` and `mount /dev/sda1 /mnt/boot`.
+2. Sync time: run `timedatectl set-ntp true`
+3. Set up the mirror list by editing `/etc/pacman.d/mirrorlist` and commenting out all but the RackSpace entry.
+4. Bootstrap the install: run `pacstrap /mnt base base-devel vim`, which will take several minutes.
+5. Generate the fstab: run `genfstab -p /mnt >> /mnt/etc/fstab`
+6. Switch to the installed system: run `arch-chroot /mnt`
+7. Set the hostname: run e.g. `echo starship-enterprise > /etc/hostname`
+8. **optional** Set the local timezone to e.g. Central: `ln -s /usr/share/zoneinfo/US/Central /etc/localtime` (note: if you skip this step the system will run on UTC time)
+9. Set up your locale: edit `/etc/locale.gen` and uncomment your desired locales (e.g. `en_US.UTF-8 UTF-8`)
+10. Create your locale: run `locale-gen`
+11. Set your locale current configuration: run e.g. `echo LANG=en_US.UTF-8 > /etc/locale.conf`
+12. Set up the network: use `ip link` to discover your network interface name, then run e.g. `systemctl enable dhcpcd@enp0s3.service`
+13. Set the system clock: run `hwclock --systohc --utc`
+14. Set the root user password: run `passwd`
+15. **IF you encrypted your Linux root filesystem**: `vim /etc/mkinitcpio.conf` and change the `HOOKS=` line to `HOOKS="systemd autodetect modconf block sd-encrypt filesystems keyboard fsck"`.
+16. Run `mkinitcpio -p linux` to generate a new Linux initramfs.
+17. Set up the `systemd-boot` boot manager: `bootctl --path=/boot install`
+18. Create a boot entry for Arch Linux by creating a file `/boot/loader/entries/arch.conf` and changing `/boot/loader/loader.conf` to point to it. Here are examples to use:
+
+**`/boot/loader/loader.conf`**:
+
+```
+timeout 3
+default arch
+editor  0
+```
+
+For a non-encrypted root filesystem, create **`/boot/loader/entries/arch.conf`** like this:
+
+```
+title       Arch Linux
+linux       /vmlinuz-linux
+initrd      /initramfs-linux.img
+options     root=PARTUUID=<partition-uuid> rw
+```
+
+Tip: To start the `arch.conf` file, seed it with `blkid -s PARTUUID -o value /dev/sda4` > arch.conf` which creates a file with the correct Partition UUID in it.
+
+For an encrypted root filesystem, create **`/boot/loader/entries/arch.conf`** like this:
+
+```
+title       Arch Linux
+linux       /vmlinuz-linux
+initrd      /initramfs-linux.img
+options     luks.name=<device-uuid>=archlinux root=/dev/mapper/archlinux rw
+```
+
+Tip: To start the `arch.conf` file, seed it with `blkid -s UUID -o value /dev/sda4` > arch.conf` which creates a file with the correct Device UUID in it.
+
+
+## Complete installation and boot system
+
+Finally, run `exit` to leave the installed system environment, and `systemctl poweroff` to shut down the machine. Remove the USB flash drive and reboot the machine. You should be able to select Arch Linux or macOS, and boot either successfully.
 
 ## References/Source Material
 
-Credit goes to these sites for providing source material for this blog post.
-You can reference these for further information.
+Credit goes to these sites for providing source material for this blog post. You can reference these for further information.
 
-* [Mashable: how to clean install El Capitan](http://mashable.com/2015/10/01/clean-install-os-x-el-capitan)
+* [OS X Daily: how to clean install macOS Sierra](http://osxdaily.com/2016/09/26/clean-install-macos-sierra/)
 * [Arch Linux: Macbook Installation](https://wiki.archlinux.org/index.php/MacBook#OS_X_with_Arch_Linux)
 * [Arch Linux: USB flash installation media in Mac OS X](https://wiki.archlinux.org/index.php/USB_flash_installation_media#In_Mac_OS_X)
-* [The rEFInd Boot Manager](http://www.rodsbooks.com/refind)
-
-A special thanks to Mashable, and the Rod Smith site, for excellent explanations and instructions.
+* [Arch Linux: using dm-crypt to encrypt devices](https://wiki.archlinux.org/index.php/Dm-crypt)
 
 If you really want to dig into how things work during boot, an excellent read is Rod Smith's [Managing EFI Boot Loaders for Linux](http://www.rodsbooks.com/efi-bootloaders/index.html).
